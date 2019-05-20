@@ -1,10 +1,14 @@
 #ifndef QROSNODE_H
 #define QROSNODE_H
 
+#include "prototype/SecureMsg.h"
+
 #include <ros/ros.h>
 //#include <QtWidgets>
 #include <QObject>
 #include <std_msgs/String.h>
+
+
 
 Q_DECLARE_METATYPE(std::string);
 
@@ -31,7 +35,7 @@ private:
 	int init_argc;
 	char **init_argv;
 	void onNewLegitimateMsg(const std_msgs::String::ConstPtr& msg);
-	void onNewCapturedMsg(const std_msgs::String::ConstPtr& msg);
+	void onNewCapturedMsg(const prototype::SecureMsg& msg);
 	ros::Subscriber trusted_subscriber;
 	ros::Subscriber mitm_subscriber;
 	ros::Publisher trusted_publisher;

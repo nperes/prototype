@@ -3,13 +3,17 @@
 #include "prototype/SecureMsg.h"
 #include <sstream>
 
+#include <openssl/evp.h>
+#include <openssl/hmac.h>
+
 namespace {
 
 	class Talker {
 		int init_argc;
 		char **init_argv;
-		ros::Publisher talker;
 		ros::Subscriber relay_listener;
+		ros::Publisher talker;
+
 		
 		public:
 				explicit Talker(int argc, char **argv);
@@ -39,8 +43,22 @@ namespace {
 	
 	void Talker::chatterCallback(const std_msgs::String::ConstPtr &msg)
 	{
-			ROS_INFO("Publishing: [%s]\n", msg->data.c_str());
+			ROS_INFO("Trusted Talker: publishing: [%s]\n", msg->data.c_str());
+
+			static uint32_t md_size_ = EVP_MD_size(EVP_sha256());
+			static uint8_t *dummy_hmac_key_ = (uint8_t*)"01234567890123456789012345678901";
+			
+			uint8_t *md_val = new uint8_t[md_size_];
+			uint32_t md_size = 0;
+			
+			HMAC(EVP_sha256(), dummy_hmac_key_, md_size_, (const uint8_t*)msg->data.c_str(), msg->data.length(), md_val,
+	    &md_size);
+	    
+	    ROS_ASSERT(md_size == md_size_);
+	    
 			prototype::SecureMsg new_msg;
+						
+			new_msg.hmac = (char *)md_val;
 			new_msg.data = msg->data.c_str();
 			talker.publish(new_msg);
 	}

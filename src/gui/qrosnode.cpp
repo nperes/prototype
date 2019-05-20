@@ -1,4 +1,5 @@
 #include "../include/prototype/gui/qrosnode.h"
+
 #include <iostream>
 #include <string>
 #include <mutex>
@@ -23,7 +24,7 @@ std_msgs::String publish_msg;
 
 std::mutex inject_mtx;
 std::atomic_flag skip_inject_publishing;
-std_msgs::String inject_msg;
+prototype::SecureMsg inject_msg;
 
 }//namespace
 
@@ -75,8 +76,7 @@ void QRosNode::startNode()
 	trusted_subscriber = nh.subscribe(Chatter_Output, Default_Msg_Buffer_Size, &QRosNode::onNewLegitimateMsg, this);
 	trusted_publisher = nh.advertise<std_msgs::String>(Chatter_Input, Default_Msg_Buffer_Size);
 	mitm_subscriber = nh.subscribe(Chatter, Default_Msg_Buffer_Size, &QRosNode::onNewCapturedMsg, this);
-	mitm_publisher = nh.advertise<std_msgs::String>(Chatter, Default_Msg_Buffer_Size);
-
+	mitm_publisher = nh.advertise<prototype::SecureMsg>(Chatter, Default_Msg_Buffer_Size);
   ros::Rate loop_rate(Default_Loop_Rate_Milli);
   
   while (ros::ok() && isStarted())
@@ -106,14 +106,14 @@ void QRosNode::startNode()
 	PRIVATE
 ******************************************************************************/
 
-void QRosNode::onNewLegitimateMsg(const std_msgs::String::ConstPtr &msg)
+void QRosNode::onNewLegitimateMsg(const std_msgs::String::ConstPtr& msg)
 {
 	emit newLegitimateMsg(msg->data);
 }
 
-void QRosNode::onNewCapturedMsg(const std_msgs::String::ConstPtr &msg)
+void QRosNode::onNewCapturedMsg(const prototype::SecureMsg& msg)
 {
-	emit newCapturedMsg(msg->data);
+	emit newCapturedMsg(msg.data);
 }
 
 /******************************************************************************
@@ -139,8 +139,8 @@ void QRosNode::onGuiPublishRequest(std::string msg)
 
 void QRosNode::onGuiInjectRequest(std::string msg)
 {
-	std_msgs::String aux;
-	aux.data = msg;
+	prototype::SecureMsg aux;
+	aux.data = msg.c_str();
 
 	std::unique_lock<std::mutex> lck(inject_mtx);
 		inject_msg = aux;

@@ -3,9 +3,9 @@
 #include "prototype/SecureMsg.h"
 #include <iostream>
 
-/**
- * This tutorial demonstrates simple receipt of messages over the ROS system.
- */
+#include <openssl/evp.h>
+#include <openssl/hmac.h>
+#include <openssl/crypto.h>
 
 namespace {
 
@@ -24,12 +24,14 @@ namespace {
 
 		private:
 			void chatterCallback(const prototype::SecureMsg &msg);
+			uint8_t *hmac_key;
 	};
 	
 	Listener::Listener(int argc, char **argv)
 	{
 		init_argc = argc;
 		init_argv = argv;
+		hmac_key = nullptr;
 	}
 	
 	Listener::~Listener()
@@ -43,7 +45,25 @@ namespace {
 	
 	void Listener::chatterCallback(const prototype::SecureMsg &msg)
 	{
-			ROS_INFO("Listening: [%s]\n", msg.data.c_str());
+			static uint32_t md_size_ = EVP_MD_size(EVP_sha256());
+			static uint8_t *dummy_hmac_key_ = (uint8_t*)"01234567890123456789012345678901";
+			
+			const uint8_t *hmac = (const uint8_t*)msg.hmac.c_str();
+			uint8_t *md_val = new uint8_t[md_size_];
+			uint32_t md_size = 0;
+			
+			HMAC(EVP_sha256(), dummy_hmac_key_, md_size_, (const uint8_t*)msg.data.c_str(), msg.data.length(), md_val,
+	    &md_size);
+	    
+	    	    ROS_ASSERT(md_size == md_size_);
+	    
+	    if(0 != CRYPTO_memcmp(md_val, hmac, md_size)) {
+		    ROS_INFO("Trusted Listener: dropping [%s]\n", msg.data.c_str());
+	    	return;
+    	}
+			
+			ROS_INFO("Trusted Listener: listening: [%s]\n", msg.data.c_str());
+
 			std_msgs::String new_msg;
 			new_msg.data = msg.data;
 			relay_talker.publish(new_msg);
@@ -51,13 +71,13 @@ namespace {
 	
 	bool Listener::init()
 	{
+
 		ros::init(init_argc, init_argv, "listener");
 		if (!ros::master::check())
 		{
 			std::cerr << "ros down\n";
 			return false;
 		}
-		//TODO(nmf) move private member of Listener 
 		//must call ros::start before ros::NodeHandle, otherwise, when NodeHandle  goes out of scope the node is automatically shutdown (as per documentation)
 		ros::start();
 		ros::NodeHandle nh;

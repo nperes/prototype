@@ -39,6 +39,15 @@ find_package(Qt5Widgets CONFIG REQUIRED)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
+#This module supports two optional COMPONENTS: Crypto and SSL. If no components are requested it only requires the crypto library.
+#find_package(OpenSSL REQUIRED COMPONENTS ssl crypto)
+find_package(OpenSSL REQUIRED ssl crypto)
+if(OPENSSL_FOUND)
+	message("-- Found OpenSSL crypto library: ${OPENSSL_CRYPTO_LIBRARY}")
+else()
+	message("unable to locate OpenSSL")
+endif()
+
 set(gui_SRCS
     src/gui/mainwindow.cpp
 		src/gui/qrosnode.cpp
@@ -47,7 +56,6 @@ set(gui_SRCS
 set(gui_HDRS
     include/prototype/gui/mainwindow.h
 		include/prototype/gui/qrosnode.h
-#		include/prototype/qt_listener.h
 )
 
 set(gui_UI
@@ -184,8 +192,8 @@ add_executable(gui ${gui_UI} ${gui_SRCS} ${gui_HDRS})
 # src/main.cpp src/gui/mainwindow.cpp src/qt_listener.cpp forms/mainwindow.ui include/prototype/gui/mainwindow.h include/prototype/qt_listener.h)
 
 # note: the Qt5Widgets_INCLUDES also includes the include directories for dependencies QtCore and QtGui
-target_include_directories(listener PRIVATE ${catkin_INCLUDE_DIRS})
-target_include_directories(talker PRIVATE ${catkin_INCLUDE_DIRS})
+target_include_directories(listener PRIVATE ${catkin_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR})
+target_include_directories(talker PRIVATE ${catkin_INCLUDE_DIRS}, ${OPENSSL_INCLUDE_DIR})
 target_include_directories(gui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/prototype ${CMAKE_CURRENT_SOURCE_DIR}/src ${catkin_INCLUDE_DIRS}$ ${Qt5Widgets_INCLUDE_DIRS})
 
 ## Rename C++ executable without prefix
@@ -204,8 +212,8 @@ target_include_directories(gui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/proto
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(listener ${catkin_LIBRARIES})
-target_link_libraries(talker ${catkin_LIBRARIES})
+target_link_libraries(listener ${catkin_LIBRARIES} ${OPENSSL_LIBRARIES})
+target_link_libraries(talker ${catkin_LIBRARIES} ${OPENSSL_LIBRARIES})
 target_link_libraries(gui ${catkin_LIBRARIES} Qt5::Widgets)
 
 #############
