@@ -7,6 +7,6 @@ int main(int argc, char *argv[])
   prototype::MainWindow w(argc, argv);
   w.threading();
   w.show();
-
+  
   return a.exec();
 }

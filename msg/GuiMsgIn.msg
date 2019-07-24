@@ -1,4 +1,3 @@
-uint8[] hmac
-uint8[] data
+string data
 bool hmacs
 bool encryption

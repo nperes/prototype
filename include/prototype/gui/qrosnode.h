@@ -2,6 +2,7 @@
 #define QROSNODE_H
 
 #include "prototype/SecureMsg.h"
+#include "prototype/GuiMsgOut.h"
 
 #include <ros/ros.h>
 //#include <QtWidgets>
@@ -11,6 +12,7 @@
 
 
 Q_DECLARE_METATYPE(std::string);
+Q_DECLARE_METATYPE(prototype::GuiMsgOut);
 
 namespace prototype {
 
@@ -34,7 +36,7 @@ protected:
 private:
 	int init_argc;
 	char **init_argv;
-	void onNewLegitimateMsg(const std_msgs::String::ConstPtr& msg);
+	void onNewLegitimateMsg(const prototype::GuiMsgOut& msg);
 	void onNewCapturedMsg(const prototype::SecureMsg& msg);
 	ros::Subscriber trusted_subscriber;
 	ros::Subscriber mitm_subscriber;
@@ -45,14 +47,17 @@ private:
 
 public slots:
 	void onStart();
-	void onGuiPublishRequest(std::string msg);
-	void onGuiInjectRequest(std::string msg);
+	void onGuiPublishRequest(std::string msg, bool hmacs, bool encryption);
+	void onGuiInjectRequest(std::string msg, bool hmacs, bool encryption);
 
 signals:
 	void started();
 	void finished();
 	void error(QString);
-	void newLegitimateMsg(std::string msg);
+	//void newLegitimateMsg(std::string msg);
+	void newLegitimateMsg(QByteArray msg);
+	void newHMAC(QByteArray msg);
+	void newLegitimateMsg1(QByteArray msg);
 	void newCapturedMsg(std::string msg);
 	
 };//class QRosNode

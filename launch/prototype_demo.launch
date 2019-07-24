@@ -1,0 +1,10 @@
+<launch>
+
+	<node pkg ="prototype" name="listener_node" type="listener" output="screen" >
+	</node>
+	<node pkg ="prototype" name="talker_node" type="talker" output="screen" >
+	</node>
+	<node pkg ="prototype" name="gui_node" type="gui" output="screen" >
+	</node>
+
+</launch>

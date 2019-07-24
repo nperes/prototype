@@ -97,6 +97,8 @@ set(gui_UI
 	msg
 	FILES
 	SecureMsg.msg
+	GuiMsgIn.msg
+	GuiMsgOut.msg
  )
 
 ## Generate services in the 'srv' folder
